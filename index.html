@@ -708,11 +708,36 @@
             });
         }
 
+        // Helper to read rating from Airtable fields under various possible field names.
+        function getPlayerRating(fields) {
+            if (!fields) return INITIAL_ELO;
+            const candidates = ['ELO', 'Rating', 'Rating (ELO)', 'Initial Rating', 'RatingValue', 'rating'];
+            for (const k of candidates) {
+                if (Object.prototype.hasOwnProperty.call(fields, k)) {
+                    const v = fields[k];
+                    if (v === undefined || v === null || v === '') continue;
+                    const n = Number(v);
+                    if (!isNaN(n)) return n;
+                    // try to parse numeric from string
+                    const parsed = parseFloat(String(v).replace(/[^\d.-]/g, ''));
+                    if (!isNaN(parsed)) return parsed;
+                }
+            }
+            // As a last resort, scan all fields for any numeric value
+            for (const key in fields) {
+                const val = fields[key];
+                if (val === undefined || val === null || val === '') continue;
+                const num = Number(val);
+                if (!isNaN(num)) return num;
+            }
+            return INITIAL_ELO;
+        }
+
         function renderStandings() {
             const sorted = [...allPlayers]
                 .sort((a, b) => {
-                    const aELO = a.fields.ELO || INITIAL_ELO;
-                    const bELO = b.fields.ELO || INITIAL_ELO;
+                    const aELO = getPlayerRating(a.fields);
+                    const bELO = getPlayerRating(b.fields);
                     return bELO - aELO;
                 })
                 .slice(0, 20);
@@ -726,7 +751,7 @@
                     const losses = player.fields.Losses || 0;
                     const total = wins + losses;
                     const winRate = total > 0 ? ((wins / total) * 100).toFixed(0) : 0;
-                    const elo = player.fields.ELO || INITIAL_ELO;
+                    const elo = getPlayerRating(player.fields);
 
                     html += `
                         <div class="card">
@@ -736,7 +761,7 @@
                             </div>
                             <div class="card-stats">
                                 <div class="stat">
-                                    <span class="stat-label">ELO Rating</span>
+                                    <span class="stat-label">Rating</span>
                                     <span class="stat-value" style="color: var(--color-primary);">${elo}</span>
                                 </div>
                                 <div class="stat">
@@ -840,8 +865,8 @@
                     const losses = player.fields.Losses || 0;
                     const total = wins + losses;
                     const winRate = total > 0 ? ((wins / total) * 100).toFixed(0) : 0;
-                    const elo = player.fields.ELO || INITIAL_ELO;
-                    const rank = [...allPlayers].sort((a, b) => (b.fields.ELO || INITIAL_ELO) - (a.fields.ELO || INITIAL_ELO)).findIndex(p => p.id === player.id) + 1;
+                    const elo = getPlayerRating(player.fields);
+                    const rank = [...allPlayers].sort((a, b) => getPlayerRating(b.fields) - getPlayerRating(a.fields)).findIndex(p => p.id === player.id) + 1;
 
                     html += `
                         <div class="card">
@@ -851,7 +876,7 @@
                             </div>
                             <div class="card-stats">
                                 <div class="stat">
-                                    <span class="stat-label">ELO Rating</span>
+                                    <span class="stat-label">Rating</span>
                                     <span class="stat-value" style="color: var(--color-primary);">${elo}</span>
                                 </div>
                                 <div class="stat">
@@ -943,8 +968,8 @@
                 partnersHtml += '<div class="empty-state"><div class="empty-state-icon">🤝</div><p>No other players available yet</p></div>';
             } else {
                 availablePartners.forEach(partner => {
-                    const partnerELO = partner.fields.ELO || INITIAL_ELO;
-                    const currentELO = currentPlayer.fields.ELO || INITIAL_ELO;
+                    const partnerELO = getPlayerRating(partner.fields);
+                    const currentELO = getPlayerRating(currentPlayer.fields);
                     const eloDiff = Math.abs(partnerELO - currentELO);
 
                     partnersHtml += `
@@ -952,7 +977,7 @@
                             <div class="card-header">
                                 <div>
                                     <div class="card-title">${partner.fields.Name}</div>
-                                    <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">ELO: ${partnerELO} (Diff: ${eloDiff})</div>
+                                    <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">Rating: ${partnerELO} (Diff: ${eloDiff})</div>
                                 </div>
                             </div>
                             <button class="button" onclick="createPair('${currentPlayerName}', '${partner.fields.Name}')">Create Pair</button>
@@ -1015,7 +1040,8 @@
         /**
          * Join the league from the start screen button.
          * - If a player record already exists for this Telegram user, simply reveal the app.
-         * - Otherwise create a new Players record in Airtable with INITIAL_ELO, 0 wins/losses.
+         * - Otherwise create a new Players record in Airtable with 0 wins/losses.
+         * Note: we do NOT send an "ELO" field here to avoid unknown-field errors.
          */
         async function joinLeagueFromStart(buttonEl) {
             try {
@@ -1045,7 +1071,7 @@
 
                 const fields = {
                     'Name': displayName,
-                    'ELO': INITIAL_ELO,
+                    // Do not include 'ELO' field here (Airtable may not have this exact field name).
                     'Wins': 0,
                     'Losses': 0
                 };
