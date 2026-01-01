@@ -38,6 +38,47 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            position: relative;
+        }
+
+        .main-app {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .main-app.hidden {
+            display: none;
+        }
+
+        .start-screen {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            margin: 0 16px;
+        }
+
+        .start-screen.hidden {
+            display: none;
+        }
+
+        .start-screen-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 14px;
+            padding: 32px 28px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+
+        .start-screen-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
         }
 
         .header {
@@ -346,55 +387,68 @@
             <span id="playerName" style="font-size: 12px; color: var(--color-text-secondary);">Loading...</span>
         </div>
 
-        <div class="nav-tabs">
-            <button class="nav-tab active" data-tab="standings">Standings</button>
-            <button class="nav-tab" data-tab="matches">Matches</button>
-            <button class="nav-tab" data-tab="profile">My Stats</button>
-            <button class="nav-tab" data-tab="pairs">Pairs</button>
-            <button class="nav-tab" data-tab="join">Join League</button>
-        </div>
-
-        <!-- STANDINGS TAB -->
-        <div id="standings" class="content active">
-            <div class="loading" id="standingsLoading">Loading standings...</div>
-            <div id="standingsContent" style="display: none;"></div>
-        </div>
-
-        <!-- MATCHES TAB -->
-        <div id="matches" class="content">
-            <div class="loading" id="matchesLoading">Loading matches...</div>
-            <div id="matchesContent" style="display: none;"></div>
-        </div>
-
-        <!-- PROFILE TAB -->
-        <div id="profile" class="content">
-            <div class="loading" id="profileLoading">Loading profile...</div>
-            <div id="profileContent" style="display: none;"></div>
-        </div>
-
-        <!-- PAIRS TAB -->
-        <div id="pairs" class="content">
-            <div class="section">
-                <div class="section-title">Available Partners</div>
-                <div class="loading" id="pairsLoading">Loading partners...</div>
-                <div id="pairsContent" style="display: none;"></div>
-            </div>
-            <div class="section">
-                <div class="section-title">My Pairs</div>
-                <div id="myPairsContent" style="display: none;"></div>
+        <div id="startScreen" class="start-screen hidden">
+            <div class="start-screen-card">
+                <span class="start-screen-icon">👋</span>
+                <h2>Welcome to Padel League</h2>
+                <p style="margin-top: 8px; margin-bottom: 16px; color: var(--color-text-secondary); font-size: 14px;">
+                    Tap the button below to join the league and unlock the full menu.
+                </p>
+                <button id="startJoinBtn" class="button">Join League</button>
             </div>
         </div>
 
-        <!-- JOIN TAB -->
-        <div id="join" class="content">
-            <div class="section">
-                <div class="section-title">Join League</div>
-                <div class="form-group">
-                    <label class="form-label">Player Name</label>
-                    <input type="text" id="joinName" class="form-input" placeholder="Your name">
+        <div id="mainApp" class="main-app">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="standings">Standings</button>
+                <button class="nav-tab" data-tab="matches">Matches</button>
+                <button class="nav-tab" data-tab="profile">My Stats</button>
+                <button class="nav-tab" data-tab="pairs">Pairs</button>
+                <button class="nav-tab" data-tab="join">Join League</button>
+            </div>
+
+            <!-- STANDINGS TAB -->
+            <div id="standings" class="content active">
+                <div class="loading" id="standingsLoading">Loading standings...</div>
+                <div id="standingsContent" style="display: none;"></div>
+            </div>
+
+            <!-- MATCHES TAB -->
+            <div id="matches" class="content">
+                <div class="loading" id="matchesLoading">Loading matches...</div>
+                <div id="matchesContent" style="display: none;"></div>
+            </div>
+
+            <!-- PROFILE TAB -->
+            <div id="profile" class="content">
+                <div class="loading" id="profileLoading">Loading profile...</div>
+                <div id="profileContent" style="display: none;"></div>
+            </div>
+
+            <!-- PAIRS TAB -->
+            <div id="pairs" class="content">
+                <div class="section">
+                    <div class="section-title">Available Partners</div>
+                    <div class="loading" id="pairsLoading">Loading partners...</div>
+                    <div id="pairsContent" style="display: none;"></div>
                 </div>
-                <button class="button" id="joinBtn">Join League</button>
-                <div id="joinMessage" style="margin-top: 12px; font-size: 13px; display: none;"></div>
+                <div class="section">
+                    <div class="section-title">My Pairs</div>
+                    <div id="myPairsContent" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- JOIN TAB -->
+            <div id="join" class="content">
+                <div class="section">
+                    <div class="section-title">Join League</div>
+                    <div class="form-group">
+                        <label class="form-label">Player Name</label>
+                        <input type="text" id="joinName" class="form-input" placeholder="Your name">
+                    </div>
+                    <button class="button" id="joinBtn">Join League</button>
+                    <div id="joinMessage" style="margin-top: 12px; font-size: 13px; display: none;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -437,9 +491,48 @@
                 renderMatches();
                 renderProfile();
                 renderPairs();
+                updateStartScreenState();
             } catch (error) {
                 console.error('Error loading data:', error);
             }
+        }
+
+        function activateTab(tabName) {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName);
+            });
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.toggle('active', content.id === tabName);
+            });
+        }
+
+        function hasExistingPlayerRecord() {
+            if (!currentUser) return false;
+            return allPlayers.some(player => {
+                const playerName = player.fields?.Name;
+                return player.id === currentUser.id || playerName === currentUser.username;
+            });
+        }
+
+        function updateStartScreenState() {
+            const startScreen = document.getElementById('startScreen');
+            const mainApp = document.getElementById('mainApp');
+            if (!startScreen || !mainApp) return;
+            const shouldShowStart = !hasExistingPlayerRecord();
+            if (shouldShowStart) {
+                startScreen.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+            } else {
+                startScreen.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+            }
+        }
+
+        function revealMainAppForJoin() {
+            const startScreen = document.getElementById('startScreen');
+            const mainApp = document.getElementById('mainApp');
+            startScreen?.classList.add('hidden');
+            mainApp?.classList.remove('hidden');
         }
 
         async function fetchAirtable(tableName) {
@@ -744,14 +837,22 @@
         function setupEventListeners() {
             // Tab navigation
             document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.addEventListener('click', (e) => {
-                    const tabName = e.target.dataset.tab;
-                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-                    e.target.classList.add('active');
-                    document.getElementById(tabName).classList.add('active');
+                tab.addEventListener('click', () => {
+                    activateTab(tab.dataset.tab);
                 });
             });
+
+            const startJoinBtn = document.getElementById('startJoinBtn');
+            if (startJoinBtn) {
+                startJoinBtn.addEventListener('click', () => {
+                    revealMainAppForJoin();
+                    activateTab('join');
+                    const joinInput = document.getElementById('joinName');
+                    if (joinInput) {
+                        joinInput.focus();
+                    }
+                });
+            }
 
             // Join league
             document.getElementById('joinBtn').addEventListener('click', async () => {
