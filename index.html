@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Padel League Manager</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -18,11 +18,7 @@
             --color-border: #3a3a3a;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -33,37 +29,13 @@
             min-height: 100vh;
         }
 
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
+        .app-container { display:flex; flex-direction:column; height:100vh; overflow:hidden; position:relative; }
 
-        .main-app {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            overflow: hidden;
-        }
+        .main-app { display:flex; flex-direction:column; flex:1; overflow:hidden; }
+        .main-app.hidden { display:none; }
 
-        .main-app.hidden {
-            display: none;
-        }
-
-        .start-screen {
-            display: flex;
-            flex: 1;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            margin: 0 16px;
-        }
-
-        .start-screen.hidden {
-            display: none;
-        }
+        .start-screen { display:flex; flex:1; align-items:center; justify-content:center; padding:16px; margin:0 16px; }
+        .start-screen.hidden { display:none; }
 
         .start-screen-card {
             background: var(--color-surface);
@@ -75,323 +47,124 @@
             text-align: center;
         }
 
-        .start-screen-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            display: block;
-        }
+        .start-screen-icon { font-size:48px; margin-bottom:12px; display:block; }
 
         .header {
             background: var(--color-surface);
-            border-bottom: 1px solid var(--color-border);
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
+            border-bottom:1px solid var(--color-border);
+            padding:16px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            flex-shrink:0;
         }
 
-        .header h1 {
-            font-size: 20px;
-            font-weight: 600;
-            margin: 0;
-        }
+        .header h1 { font-size:20px; font-weight:600; margin:0; }
 
         .nav-tabs {
-            display: flex;
-            gap: 0;
-            border-bottom: 1px solid var(--color-border);
-            background: var(--color-surface);
-            flex-shrink: 0;
+            display:flex; gap:0; border-bottom:1px solid var(--color-border); background:var(--color-surface); flex-shrink:0;
         }
 
         .nav-tab {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
-            border: none;
-            background: none;
-            color: var(--color-text-secondary);
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-            border-bottom: 3px solid transparent;
+            flex:1; padding:12px; text-align:center; border:none; background:none; color:var(--color-text-secondary);
+            cursor:pointer; font-size:14px; font-weight:500; transition:all 0.2s; border-bottom:3px solid transparent;
         }
+        .nav-tab.active { color:var(--color-primary); border-bottom-color:var(--color-primary); }
+        .nav-tab:hover:not(.active) { color:var(--color-text); }
 
-        .nav-tab.active {
-            color: var(--color-primary);
-            border-bottom-color: var(--color-primary);
-        }
+        .content { flex:1; overflow-y:auto; padding:16px; display:none; }
+        .content.active { display:block; }
 
-        .nav-tab:hover:not(.active) {
-            color: var(--color-text);
-        }
-
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: none;
-        }
-
-        .content.active {
-            display: block;
-        }
-
-        .section {
-            margin-bottom: 24px;
-        }
-
+        .section { margin-bottom:24px; }
         .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--color-text-secondary);
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
+            font-size:14px; font-weight:600; color:var(--color-text-secondary);
+            text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px;
         }
 
         .card {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
+            background:var(--color-surface); border:1px solid var(--color-border); border-radius:8px; padding:12px; margin-bottom:12px;
         }
 
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
+        .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+        .card-title { font-size:16px; font-weight:600; }
         .card-rank {
-            background: var(--color-primary);
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 14px;
+            background:var(--color-primary); color:white; width:32px; height:32px; border-radius:50%;
+            display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px;
         }
 
         .card-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            font-size: 13px;
+            display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:13px;
         }
 
-        .stat {
-            display: flex;
-            flex-direction: column;
-        }
+        .stat { display:flex; flex-direction:column; }
+        .stat-label { color:var(--color-text-secondary); font-size:12px; margin-bottom:4px; }
+        .stat-value { font-size:14px; font-weight:600; }
 
-        .stat-label {
-            color: var(--color-text-secondary);
-            font-size: 12px;
-            margin-bottom: 4px;
-        }
-
-        .stat-value {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .win-rate {
-            color: var(--color-success);
-        }
+        .win-rate { color:var(--color-success); }
 
         .button {
-            background: var(--color-primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 12px 16px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            width: 100%;
-            margin-top: 12px;
+            background:var(--color-primary); color:white; border:none; border-radius:6px; padding:12px 16px;
+            font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; width:100%; margin-top:12px;
         }
-
-        .button:hover {
-            background: var(--color-primary-hover);
-        }
-
-        .button:active {
-            opacity: 0.8;
-        }
+        .button:hover { background:var(--color-primary-hover); }
+        .button:active { opacity:0.8; }
 
         .button--secondary {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            color: var(--color-text);
+            background:var(--color-surface); border:1px solid var(--color-border); color:var(--color-text);
         }
+        .button--secondary:hover { background:var(--color-border); }
 
-        .button--secondary:hover {
-            background: var(--color-border);
-        }
-
-        .form-group {
-            margin-bottom: 12px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 13px;
-            margin-bottom: 6px;
-            font-weight: 500;
-        }
-
+        .form-group { margin-bottom:12px; }
+        .form-label { display:block; font-size:13px; margin-bottom:6px; font-weight:500; }
         .form-input {
-            width: 100%;
-            padding: 10px 12px;
-            background: var(--color-background);
-            border: 1px solid var(--color-border);
-            border-radius: 6px;
-            color: var(--color-text);
-            font-size: 14px;
+            width:100%; padding:10px 12px; background:var(--color-background); border:1px solid var(--color-border);
+            border-radius:6px; color:var(--color-text); font-size:14px;
         }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 2px rgba(32, 140, 133, 0.2);
-        }
+        .form-input:focus { outline:none; border-color:var(--color-primary); box-shadow:0 0 0 2px rgba(32,140,133,0.2); }
 
         .match-result {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            background: var(--color-background);
-            border-radius: 6px;
-            margin-bottom: 8px;
+            display:flex; align-items:center; justify-content:space-between; padding:12px; background:var(--color-background);
+            border-radius:6px; margin-bottom:8px;
         }
 
-        .match-teams {
-            flex: 1;
-        }
+        .match-teams { flex:1; }
+        .team-name { font-size:13px; margin-bottom:2px; }
+        .match-score { font-weight:600; min-width:40px; text-align:center; }
 
-        .team-name {
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-
-        .match-score {
-            font-weight: 600;
-            min-width: 40px;
-            text-align: center;
-        }
-
-        .loading {
-            text-align: center;
-            color: var(--color-text-secondary);
-            padding: 24px;
-        }
-
+        .loading { text-align:center; color:var(--color-text-secondary); padding:24px; }
         .error {
-            background: rgba(255, 89, 89, 0.1);
-            border: 1px solid var(--color-error);
-            border-radius: 6px;
-            padding: 12px;
-            color: var(--color-error);
-            font-size: 13px;
-            margin-bottom: 12px;
+            background:rgba(255,89,89,0.1); border:1px solid var(--color-error); border-radius:6px; padding:12px;
+            color:var(--color-error); font-size:13px; margin-bottom:12px;
         }
 
-        .empty-state {
-            text-align: center;
-            color: var(--color-text-secondary);
-            padding: 32px 16px;
-        }
+        .empty-state { text-align:center; color:var(--color-text-secondary); padding:32px 16px; }
+        .empty-state-icon { font-size:40px; margin-bottom:12px; opacity:0.5; }
 
-        .empty-state-icon {
-            font-size: 40px;
-            margin-bottom: 12px;
-            opacity: 0.5;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 1000;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .modal.active {
-            display: flex;
-        }
+        .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:flex-end; }
+        .modal.active { display:flex; }
 
         .modal-content {
-            background: var(--color-surface);
-            width: 100%;
-            height: 80vh;
-            border-radius: 16px 16px 0 0;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            background:var(--color-surface); width:100%; height:80vh; border-radius:16px 16px 0 0; display:flex; flex-direction:column; overflow:hidden;
         }
+        .modal-header { border-bottom:1px solid var(--color-border); padding:16px; display:flex; justify-content:space-between; align-items:center; }
+        .modal-body { flex:1; overflow-y:auto; padding:16px; }
+        .close-btn { background:none; border:none; color:var(--color-text); font-size:24px; cursor:pointer; }
 
-        .modal-header {
-            border-bottom: 1px solid var(--color-border);
-            padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--color-text);
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        @media (max-height: 600px) {
-            .modal-content {
-                height: 90vh;
-            }
-        }
+        @media (max-height:600px) { .modal-content { height:90vh; } }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="header">
             <h1>🎾 Padel League</h1>
-            <span id="playerName" style="font-size: 12px; color: var(--color-text-secondary);">Loading...</span>
+            <span id="playerName" style="font-size:12px; color:var(--color-text-secondary);">Loading...</span>
         </div>
 
         <div id="startScreen" class="start-screen hidden">
             <div class="start-screen-card">
                 <span class="start-screen-icon">👋</span>
                 <h2>Welcome to Padel League</h2>
-                <p style="margin-top: 8px; margin-bottom: 16px; color: var(--color-text-secondary); font-size: 14px;">
+                <p style="margin-top:8px; margin-bottom:16px; color:var(--color-text-secondary); font-size:14px;">
                     Tap the button below to join the league and unlock the full menu.
                 </p>
                 <button id="startJoinBtn" class="button">Join League</button>
@@ -404,25 +177,24 @@
                 <button class="nav-tab" data-tab="matches">Matches</button>
                 <button class="nav-tab" data-tab="profile">My Stats</button>
                 <button class="nav-tab" data-tab="pairs">Pairs</button>
-                <!-- Removed manual Join tab per request -->
             </div>
 
             <!-- STANDINGS TAB -->
             <div id="standings" class="content active">
                 <div class="loading" id="standingsLoading">Loading standings...</div>
-                <div id="standingsContent" style="display: none;"></div>
+                <div id="standingsContent" style="display:none;"></div>
             </div>
 
             <!-- MATCHES TAB -->
             <div id="matches" class="content">
                 <div class="loading" id="matchesLoading">Loading matches...</div>
-                <div id="matchesContent" style="display: none;"></div>
+                <div id="matchesContent" style="display:none;"></div>
             </div>
 
             <!-- PROFILE TAB -->
             <div id="profile" class="content">
                 <div class="loading" id="profileLoading">Loading profile...</div>
-                <div id="profileContent" style="display: none;"></div>
+                <div id="profileContent" style="display:none;"></div>
             </div>
 
             <!-- PAIRS TAB -->
@@ -430,15 +202,13 @@
                 <div class="section">
                     <div class="section-title">Available Partners</div>
                     <div class="loading" id="pairsLoading">Loading partners...</div>
-                    <div id="pairsContent" style="display: none;"></div>
+                    <div id="pairsContent" style="display:none;"></div>
                 </div>
                 <div class="section">
                     <div class="section-title">My Pairs</div>
-                    <div id="myPairsContent" style="display: none;"></div>
+                    <div id="myPairsContent" style="display:none;"></div>
                 </div>
             </div>
-
-            <!-- Note: join tab removed; joining is done from the start screen button -->
         </div>
     </div>
 
@@ -448,7 +218,6 @@
         const AIRTABLE_PLAYERS_TABLE = 'Players';
         const AIRTABLE_MATCHES_TABLE = 'Matches';
         const AIRTABLE_PAIRS_TABLE = 'Pairs';
-        // Table for storing set-level scores linked to matches. Update this if your table name differs.
         const AIRTABLE_SETS_TABLE = 'setScores';
         const INITIAL_ELO = 1200;
 
@@ -456,20 +225,15 @@
         let allPlayers = [];
         let allMatches = [];
         let allPairs = [];
-        // Holds set score records for each match. Populated on load.
         let allSetScores = [];
 
-        // Initialize Telegram WebApp
+        // Telegram WebApp init
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-        if (tg && typeof tg.ready === 'function') {
-            tg.ready();
-        }
+        if (tg && typeof tg.ready === 'function') tg.ready();
 
         function getTelegramUser() {
             if (!tg) return null;
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                return tg.initDataUnsafe.user;
-            }
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) return tg.initDataUnsafe.user;
             if (!tg.initData) return null;
             try {
                 const params = new URLSearchParams(tg.initData);
@@ -482,14 +246,13 @@
             }
         }
 
-        // Initialize app
         async function init() {
             const user = getTelegramUser();
             if (user && user.id) {
                 const displayName = user.username || user.first_name || 'Player';
                 currentUser = { id: user.id, username: displayName };
             }
-            // Retrieve any previously stored joined information from localStorage
+
             try {
                 const storedName = localStorage.getItem('padelLeagueDisplayName');
                 const storedJoined = localStorage.getItem('padelLeagueJoined');
@@ -506,7 +269,6 @@
                     document.getElementById('playerName').textContent = 'Guest';
                 }
             } catch (e) {
-                // Fallback if localStorage not available
                 if (currentUser && currentUser.username) {
                     document.getElementById('playerName').textContent = currentUser.username;
                 } else {
@@ -521,7 +283,6 @@
         async function loadAllData() {
             let error = null;
             try {
-                // Load all tables in parallel; if a table does not exist or fails, it will resolve to an empty array.
                 const results = await Promise.all([
                     fetchAirtable(AIRTABLE_PLAYERS_TABLE),
                     fetchAirtable(AIRTABLE_MATCHES_TABLE),
@@ -536,15 +297,12 @@
                 error = err;
                 console.error('Error loading data:', err);
             } finally {
-                // Always attempt to render UI and hide loaders regardless of success.
                 renderStandings();
                 renderMatches();
                 renderProfile();
                 renderPairs();
                 updateStartScreenState();
-                if (error) {
-                    showGlobalError('Failed to load data. Please check your network or API settings.');
-                }
+                if (error) showGlobalError('Failed to load data. Please check your network or API settings.');
             }
         }
 
@@ -561,10 +319,9 @@
             if (!currentUser) return false;
             return allPlayers.some(player => {
                 const fields = player.fields || {};
-                // Check by stored TelegramID, TelegramUsername or fall back to Name.
-                const telegramIdMatch = fields.TelegramID && currentUser && String(fields.TelegramID) === String(currentUser.id);
-                const telegramUsernameMatch = fields.TelegramUsername && currentUser && fields.TelegramUsername === currentUser.username;
-                const nameMatch = fields.Name && currentUser && fields.Name === currentUser.username;
+                const telegramIdMatch = fields['Telegram ID'] && currentUser && String(fields['Telegram ID']) === String(currentUser.id);
+                const telegramUsernameMatch = fields['Telegram Username'] && currentUser && fields['Telegram Username'] === currentUser.username;
+                const nameMatch = fields['Name'] && currentUser && fields['Name'] === currentUser.username;
                 return telegramIdMatch || telegramUsernameMatch || nameMatch;
             });
         }
@@ -573,15 +330,8 @@
             const startScreen = document.getElementById('startScreen');
             const mainApp = document.getElementById('mainApp');
             if (!startScreen || !mainApp) return;
-            /**
-             * Determine if the user has joined locally. We check for the presence of
-             * currentUser.joined (set after a successful join) or a user-provided
-             * displayName. This prevents the start screen from reappearing after
-             * joining even if the app cannot fetch existing records due to
-             * connectivity or CORS issues.
-             */
+
             const joinedFlag = currentUser && (currentUser.joined || currentUser.displayName);
-            // Show start screen only if the user has not joined locally and there is no matching record in Airtable.
             const shouldShowStart = !hasExistingPlayerRecord() && !joinedFlag;
             if (shouldShowStart) {
                 startScreen.classList.remove('hidden');
@@ -601,19 +351,15 @@
 
         async function fetchAirtable(tableName) {
             try {
-                const response = await fetch(
-                    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableName)}`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-                            'Content-Type': 'application/json'
-                        }
+                const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableName)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+                        'Content-Type': 'application/json'
                     }
-                );
+                });
                 const data = await response.json();
                 if (!response.ok) {
                     console.error(`Airtable GET error for ${tableName}`, response.status, data);
-                    // Return empty on error so UI still renders, but log details.
                     return [];
                 }
                 return data.records || [];
@@ -623,15 +369,7 @@
             }
         }
 
-        function calculateELO(winnerELO, loserELO, K = 32) {
-            const expectedWinner = 1 / (1 + Math.pow(10, (loserELO - winnerELO) / 400));
-            const expectedLoser = 1 / (1 + Math.pow(10, (winnerELO - loserELO) / 400));
-            const newWinnerELO = Math.round(winnerELO + K * (1 - expectedWinner));
-            const newLoserELO = Math.round(loserELO + K * (0 - expectedLoser));
-            return { newWinnerELO, newLoserELO };
-        }
-
-        // Improved create with error handling and logging
+        // improved create with error handling
         async function createAirtableRecord(tableName, fields) {
             const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableName)}`;
             try {
@@ -641,22 +379,16 @@
                         'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        records: [{ fields }]
-                    })
+                    body: JSON.stringify({ records: [{ fields }] })
                 });
                 const data = await response.json();
-                // Log full response for debugging
                 console.debug('Airtable create response', { url, status: response.status, data });
 
                 if (!response.ok) {
-                    // Try to give a friendly error message coming from Airtable
                     const message = data && data.error && data.error.message ? data.error.message : `HTTP ${response.status}`;
                     throw new Error(message);
                 }
-                if (!data.records) {
-                    throw new Error('Unexpected response from Airtable (no records in response).');
-                }
+                if (!data.records) throw new Error('Unexpected response from Airtable (no records in response).');
                 return data;
             } catch (error) {
                 console.error(`Error creating record in ${tableName}:`, error);
@@ -666,16 +398,13 @@
 
         async function deleteAirtableRecord(tableName, recordId) {
             try {
-                const response = await fetch(
-                    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableName)}/${recordId}`,
-                    {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-                            'Content-Type': 'application/json'
-                        }
+                const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableName)}/${recordId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+                        'Content-Type': 'application/json'
                     }
-                );
+                });
                 const data = await response.json();
                 if (!response.ok) {
                     console.error('Airtable delete error', response.status, data);
@@ -688,42 +417,29 @@
             }
         }
 
-        /**
-         * Display a global error message across all sections.
-         * Hides any loading spinners and inserts a standard error card into each content area.
-         * @param {string} message Message to display.
-         */
         function showGlobalError(message) {
-            // Hide all loading indicators
-            document.querySelectorAll('.loading').forEach(el => {
-                el.style.display = 'none';
-            });
-            // List of content container IDs to update
+            document.querySelectorAll('.loading').forEach(el => el.style.display = 'none');
             ['standingsContent', 'matchesContent', 'profileContent', 'pairsContent', 'myPairsContent'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) {
-                    el.innerHTML = '<div class="error">' + message + '</div>';
-                    el.style.display = 'block';
-                }
+                if (el) { el.innerHTML = '<div class="error">' + message + '</div>'; el.style.display = 'block'; }
             });
         }
 
-        // Helper to read rating from Airtable fields under various possible field names.
+        // Read rating from your Airtable schema. Prioritize "Individual Rating".
         function getPlayerRating(fields) {
             if (!fields) return INITIAL_ELO;
-            const candidates = ['ELO', 'Rating', 'Rating (ELO)', 'Initial Rating', 'RatingValue', 'rating'];
+            const candidates = ['Individual Rating', 'Rating', 'Rating (ELO)', 'Initial Rating', 'RatingValue', 'rating', 'ELO'];
             for (const k of candidates) {
                 if (Object.prototype.hasOwnProperty.call(fields, k)) {
                     const v = fields[k];
                     if (v === undefined || v === null || v === '') continue;
                     const n = Number(v);
                     if (!isNaN(n)) return n;
-                    // try to parse numeric from string
                     const parsed = parseFloat(String(v).replace(/[^\d.-]/g, ''));
                     if (!isNaN(parsed)) return parsed;
                 }
             }
-            // As a last resort, scan all fields for any numeric value
+            // fallback: scan for any numeric field
             for (const key in fields) {
                 const val = fields[key];
                 if (val === undefined || val === null || val === '') continue;
@@ -734,13 +450,7 @@
         }
 
         function renderStandings() {
-            const sorted = [...allPlayers]
-                .sort((a, b) => {
-                    const aELO = getPlayerRating(a.fields);
-                    const bELO = getPlayerRating(b.fields);
-                    return bELO - aELO;
-                })
-                .slice(0, 20);
+            const sorted = [...allPlayers].sort((a, b) => getPlayerRating(b.fields) - getPlayerRating(a.fields)).slice(0, 20);
 
             let html = '<div class="section">';
             if (sorted.length === 0) {
@@ -751,7 +461,7 @@
                     const losses = player.fields.Losses || 0;
                     const total = wins + losses;
                     const winRate = total > 0 ? ((wins / total) * 100).toFixed(0) : 0;
-                    const elo = getPlayerRating(player.fields);
+                    const rating = getPlayerRating(player.fields);
 
                     html += `
                         <div class="card">
@@ -761,8 +471,8 @@
                             </div>
                             <div class="card-stats">
                                 <div class="stat">
-                                    <span class="stat-label">Rating</span>
-                                    <span class="stat-value" style="color: var(--color-primary);">${elo}</span>
+                                    <span class="stat-label">Individual Rating</span>
+                                    <span class="stat-value" style="color: var(--color-primary);">${rating}</span>
                                 </div>
                                 <div class="stat">
                                     <span class="stat-label">Win Rate</span>
@@ -802,22 +512,18 @@
                     const score2 = match.fields['Score Team 2'] ?? match.fields['Score Team2'] ?? match.fields['Team 2 Score'] ?? match.fields['Team2 Score'] ?? 0;
                     const date = match.fields['Match Date'] || match.fields['Date'] || 'TBD';
 
-                    // Attempt to gather set-level scores for this match, if available.
                     let setScoresText = '';
                     if (Array.isArray(allSetScores) && allSetScores.length > 0) {
                         const relatedSets = allSetScores.filter(setRecord => {
                             const link = setRecord.fields && (setRecord.fields['Match'] || setRecord.fields['match'] || setRecord.fields['Matches']);
-                            if (Array.isArray(link)) {
-                                return link.includes(match.id);
-                            }
+                            if (Array.isArray(link)) return link.includes(match.id);
                             return link === match.id;
                         });
                         if (relatedSets.length > 0) {
                             const parts = relatedSets.map(setRecord => {
                                 const f = setRecord.fields || {};
-                                // Attempt to support different field naming conventions
-                                const s1 = f['Score Team 1'] ?? f['Score Team1'] ?? f['Team 1 Score'] ?? f['Team1 Score'] ?? '';
-                                const s2 = f['Score Team 2'] ?? f['Score Team2'] ?? f['Team 2 Score'] ?? f['Team2 Score'] ?? '';
+                                const s1 = f['Pair 1 Score'] ?? f['Pair 1 Score'] ?? f['Pair 1 Score'] ?? f['Pair 1 Score'] ?? '';
+                                const s2 = f['Pair 2 Score'] ?? f['Pair 2 Score'] ?? f['Pair 2 Score'] ?? f['Pair 2 Score'] ?? '';
                                 return `${s1}-${s2}`;
                             }).filter(Boolean);
                             setScoresText = parts.join(', ');
@@ -828,13 +534,13 @@
                         <div class="match-result">
                             <div class="match-teams">
                                 <div class="team-name">${team1}</div>
-                                <div class="team-name" style="color: var(--color-text-secondary); font-size: 12px;">${date}</div>
+                                <div class="team-name" style="color: var(--color-text-secondary); font-size:12px;">${date}</div>
                             </div>
                             <div class="match-score">${score1} - ${score2}</div>
-                            <div class="match-teams" style="text-align: right;">
+                            <div class="match-teams" style="text-align:right;">
                                 <div class="team-name">${team2}</div>
                             </div>
-                            ${setScoresText ? `<div style="grid-column: 1 / span 3; font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">Sets: ${setScoresText}</div>` : ''}
+                            ${setScoresText ? `<div style="grid-column:1 / span 3; font-size:11px; color:var(--color-text-secondary); margin-top:4px;">Sets: ${setScoresText}</div>` : ''}
                         </div>
                     `;
                 });
@@ -854,18 +560,18 @@
             if (currentUser && allPlayers.length > 0) {
                 const player = allPlayers.find(p => {
                     const fields = p.fields || {};
-                    // Match by Telegram identifiers or by displayName fallback
-                    const idMatch = fields.TelegramID && currentUser && String(fields.TelegramID) === String(currentUser.id);
-                    const usernameMatch = fields.TelegramUsername && currentUser && fields.TelegramUsername === currentUser.username;
-                    const displayNameMatch = fields.Name && currentUser && currentUser.displayName && fields.Name === currentUser.displayName;
+                    const idMatch = fields['Telegram ID'] && currentUser && String(fields['Telegram ID']) === String(currentUser.id);
+                    const usernameMatch = fields['Telegram Username'] && currentUser && fields['Telegram Username'] === currentUser.username;
+                    const displayNameMatch = fields['Name'] && currentUser && currentUser.displayName && fields['Name'] === currentUser.displayName;
                     return idMatch || usernameMatch || displayNameMatch;
                 });
+
                 if (player) {
                     const wins = player.fields.Wins || 0;
                     const losses = player.fields.Losses || 0;
                     const total = wins + losses;
                     const winRate = total > 0 ? ((wins / total) * 100).toFixed(0) : 0;
-                    const elo = getPlayerRating(player.fields);
+                    const rating = getPlayerRating(player.fields);
                     const rank = [...allPlayers].sort((a, b) => getPlayerRating(b.fields) - getPlayerRating(a.fields)).findIndex(p => p.id === player.id) + 1;
 
                     html += `
@@ -876,8 +582,8 @@
                             </div>
                             <div class="card-stats">
                                 <div class="stat">
-                                    <span class="stat-label">Rating</span>
-                                    <span class="stat-value" style="color: var(--color-primary);">${elo}</span>
+                                    <span class="stat-label">Individual Rating</span>
+                                    <span class="stat-value" style="color: var(--color-primary);">${rating}</span>
                                 </div>
                                 <div class="stat">
                                     <span class="stat-label">Win Rate</span>
@@ -910,30 +616,26 @@
         }
 
         function renderPairs() {
-            // Determine current player record by checking Telegram identifiers and display name
             const currentPlayer = currentUser ? allPlayers.find(p => {
                 const fields = p.fields || {};
-                const idMatch = fields.TelegramID && currentUser && String(fields.TelegramID) === String(currentUser.id);
-                const usernameMatch = fields.TelegramUsername && currentUser && fields.TelegramUsername === currentUser.username;
-                const displayNameMatch = fields.Name && currentUser && currentUser.displayName && fields.Name === currentUser.displayName;
+                const idMatch = fields['Telegram ID'] && currentUser && String(fields['Telegram ID']) === String(currentUser.id);
+                const usernameMatch = fields['Telegram Username'] && currentUser && fields['Telegram Username'] === currentUser.username;
+                const displayNameMatch = fields['Name'] && currentUser && currentUser.displayName && fields['Name'] === currentUser.displayName;
                 return idMatch || usernameMatch || displayNameMatch;
             }) : null;
+
             const currentPlayerName = currentPlayer?.fields?.Name || currentUser?.displayName || currentUser?.username;
             const currentPlayerId = currentPlayer?.id;
 
             const playersById = allPlayers.reduce((acc, player) => {
-                if (player.fields?.Name) {
-                    acc[player.id] = player.fields.Name;
-                }
+                if (player.fields?.Name) acc[player.id] = player.fields.Name;
                 return acc;
             }, {});
 
             const resolvePlayerName = (value) => {
                 if (!value) return null;
                 if (Array.isArray(value)) {
-                    const resolved = value
-                        .map(val => playersById[val] || val)
-                        .find(Boolean);
+                    const resolved = value.map(val => playersById[val] || val).find(Boolean);
                     return resolved || null;
                 }
                 return playersById[value] || value;
@@ -942,24 +644,18 @@
             const pairIncludesCurrentPlayer = (value) => {
                 if (!value || !currentPlayerName) return false;
                 if (Array.isArray(value)) {
-                    if (currentPlayerId && value.includes(currentPlayerId)) {
-                        return true;
-                    }
+                    if (currentPlayerId && value.includes(currentPlayerId)) return true;
                     return value.includes(currentPlayerName);
                 }
                 return value === currentPlayerName || value === currentPlayerId;
             };
 
-            const availablePartners = currentPlayerName
-                ? allPlayers.filter(p => p.fields.Name !== currentPlayerName)
-                : allPlayers;
+            const availablePartners = currentPlayerName ? allPlayers.filter(p => p.fields.Name !== currentPlayerName) : allPlayers;
 
-            const userPairs = currentPlayerName
-                ? allPairs.filter(pair => 
-                    pairIncludesCurrentPlayer(pair.fields['Player 1']) ||
-                    pairIncludesCurrentPlayer(pair.fields['Player 2'])
-                )
-                : [];
+            const userPairs = currentPlayerName ? allPairs.filter(pair =>
+                pairIncludesCurrentPlayer(pair.fields['Player 1']) ||
+                pairIncludesCurrentPlayer(pair.fields['Player 2'])
+            ) : [];
 
             let partnersHtml = '<div class="section">';
             if (!currentPlayer) {
@@ -968,16 +664,16 @@
                 partnersHtml += '<div class="empty-state"><div class="empty-state-icon">🤝</div><p>No other players available yet</p></div>';
             } else {
                 availablePartners.forEach(partner => {
-                    const partnerELO = getPlayerRating(partner.fields);
-                    const currentELO = getPlayerRating(currentPlayer.fields);
-                    const eloDiff = Math.abs(partnerELO - currentELO);
+                    const partnerRating = getPlayerRating(partner.fields);
+                    const currentRating = getPlayerRating(currentPlayer.fields);
+                    const diff = Math.abs(partnerRating - currentRating);
 
                     partnersHtml += `
                         <div class="card">
                             <div class="card-header">
                                 <div>
                                     <div class="card-title">${partner.fields.Name}</div>
-                                    <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">Rating: ${partnerELO} (Diff: ${eloDiff})</div>
+                                    <div style="font-size:12px; color:var(--color-text-secondary); margin-top:4px;">Individual Rating: ${partnerRating} (Diff: ${diff})</div>
                                 </div>
                             </div>
                             <button class="button" onclick="createPair('${currentPlayerName}', '${partner.fields.Name}')">Create Pair</button>
@@ -995,14 +691,14 @@
                     const player1Name = resolvePlayerName(pair.fields['Player 1']);
                     const player2Name = resolvePlayerName(pair.fields['Player 2']);
                     const partnerName = player1Name === currentPlayerName ? player2Name : player1Name;
-                    const createdDate = pair.fields['Created Date'] || 'Today';
+                    const createdDate = pair.fields['Created'] || pair.fields['Created Date'] || 'Today';
 
                     myPairsHtml += `
                         <div class="card">
                             <div class="card-header">
                                 <div>
                                     <div class="card-title">You & ${partnerName || 'Partner'}</div>
-                                    <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">${createdDate}</div>
+                                    <div style="font-size:12px; color:var(--color-text-secondary); margin-top:4px;">${createdDate}</div>
                                 </div>
                             </div>
                             <button class="button button--secondary" onclick="removePair('${pair.id}')">Remove Pair</button>
@@ -1011,48 +707,29 @@
                 });
             }
 
-            const pairsContent = document.getElementById('pairsContent');
-            pairsContent.innerHTML = partnersHtml;
-            pairsContent.style.display = 'block';
+            document.getElementById('pairsContent').innerHTML = partnersHtml;
+            document.getElementById('pairsContent').style.display = 'block';
             document.getElementById('pairsLoading').style.display = 'none';
-
-            const myPairsContent = document.getElementById('myPairsContent');
-            myPairsContent.innerHTML = myPairsHtml;
+            document.getElementById('myPairsContent').innerHTML = myPairsHtml;
         }
 
         function setupEventListeners() {
-            // Tab navigation
             document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    activateTab(tab.dataset.tab);
-                });
+                tab.addEventListener('click', () => activateTab(tab.dataset.tab));
             });
 
             const startJoinBtn = document.getElementById('startJoinBtn');
             if (startJoinBtn) {
-                startJoinBtn.addEventListener('click', async () => {
-                    // New behavior: attempt to create a player record (or use existing) and open standings.
-                    await joinLeagueFromStart(startJoinBtn);
-                });
+                startJoinBtn.addEventListener('click', async () => await joinLeagueFromStart(startJoinBtn));
             }
         }
 
-        /**
-         * Join the league from the start screen button.
-         * - If a player record already exists for this Telegram user, simply reveal the app.
-         * - Otherwise create a new Players record in Airtable with 0 wins/losses.
-         * Note: we do NOT send an "ELO" field here to avoid unknown-field errors.
-         */
+        // Join flow from start screen (do not send rating field)
         async function joinLeagueFromStart(buttonEl) {
             try {
-                // Determine display name
                 let displayName = (currentUser && (currentUser.username || currentUser.displayName)) || 'Player';
-                // If no Telegram info, create a fallback name using timestamp
-                if (!currentUser || !currentUser.id) {
-                    displayName = displayName + '-' + Date.now().toString().slice(-4);
-                }
+                if (!currentUser || !currentUser.id) displayName = displayName + '-' + Date.now().toString().slice(-4);
 
-                // If there's already a matching Airtable record, just reveal UI and save local state.
                 if (hasExistingPlayerRecord()) {
                     currentUser = currentUser || {};
                     currentUser.displayName = displayName;
@@ -1064,63 +741,52 @@
                     return;
                 }
 
-                // Disable the button while creating
                 const prevText = buttonEl.innerHTML;
                 buttonEl.disabled = true;
                 buttonEl.innerHTML = 'Joining...';
 
-                const fields = {
+                // Only send fields that exist in your schema: Name, Wins, Losses, Games Played, Telegram ID, Telegram Username
+                const fieldsToCreate = {
                     'Name': displayName,
-                    // Do not include 'ELO' field here (Airtable may not have this exact field name).
                     'Wins': 0,
-                    'Losses': 0
+                    'Losses': 0,
+                    'Games Played': 0
                 };
-                if (currentUser && currentUser.id) fields['TelegramID'] = String(currentUser.id);
-                if (currentUser && currentUser.username) fields['TelegramUsername'] = currentUser.username;
+                if (currentUser && currentUser.id) fieldsToCreate['Telegram ID'] = Number(currentUser.id);
+                if (currentUser && currentUser.username) fieldsToCreate['Telegram Username'] = currentUser.username;
 
-                // Call create; it will throw with a useful message if something went wrong.
-                const res = await createAirtableRecord(AIRTABLE_PLAYERS_TABLE, fields);
+                const res = await createAirtableRecord(AIRTABLE_PLAYERS_TABLE, fieldsToCreate);
                 console.debug('Create player result', res);
 
                 if (res && res.records && res.records.length > 0) {
-                    // mark local joined state and persist
                     currentUser = currentUser || {};
                     currentUser.displayName = displayName;
                     currentUser.joined = true;
                     try { localStorage.setItem('padelLeagueDisplayName', displayName); localStorage.setItem('padelLeagueJoined', 'true'); } catch (e) {}
-                    // Reload data and show standings
                     await loadAllData();
                     revealMainAppForJoin();
                     activateTab('standings');
                 } else {
-                    // Defensive fallback; shouldn't happen because createAirtableRecord throws on non-ok
                     alert('Unable to create player record. Please try again.');
                 }
                 buttonEl.disabled = false;
                 buttonEl.innerHTML = prevText;
             } catch (err) {
                 console.error('Error joining league:', err);
-                // Show the real error message from Airtable if available
                 const msg = (err && err.message) ? err.message : 'Error while joining the league. Check console for details.';
                 alert('Join failed: ' + msg);
-                if (buttonEl) {
-                    buttonEl.disabled = false;
-                    buttonEl.innerHTML = 'Join League';
-                }
+                if (buttonEl) { buttonEl.disabled = false; buttonEl.innerHTML = 'Join League'; }
             }
         }
 
-        // Basic pair creation and removal to keep the UI functional.
+        // Basic pair creation/removal (keeps UI functional). Note: Airtable link fields generally prefer record IDs.
         async function createPair(playerAName, playerBName) {
             try {
-                if (!playerAName || !playerBName) {
-                    alert('Missing player names for pair creation.');
-                    return;
-                }
+                if (!playerAName || !playerBName) { alert('Missing player names for pair creation.'); return; }
                 const fields = {
                     'Player 1': playerAName,
                     'Player 2': playerBName,
-                    'Created Date': new Date().toISOString()
+                    'Created': new Date().toISOString()
                 };
                 await createAirtableRecord(AIRTABLE_PAIRS_TABLE, fields);
                 await loadAllData();
@@ -1142,7 +808,7 @@
             }
         }
 
-        // Start the app
+        // Start
         init();
     </script>
 </body>
