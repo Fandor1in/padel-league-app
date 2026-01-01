@@ -638,19 +638,50 @@
         }
 
         function renderPairs() {
-            const currentPlayer = allPlayers.find(p => p.fields.Name === currentUser.username);
-            
-            // Get available partners (all except current user)
-            const availablePartners = allPlayers.filter(p => p.fields.Name !== currentUser.username);
-            
-            // Get user's current pairs
-            const userPairs = allPairs.filter(p => 
-                p.fields['Player 1'] === currentUser.username || p.fields['Player 2'] === currentUser.username
-            );
+            const currentPlayer = currentUser ? allPlayers.find(p => p.fields.Name === currentUser.username) : null;
+            const currentPlayerName = currentPlayer?.fields.Name || currentUser?.username;
+            const currentPlayerId = currentPlayer?.id;
 
-            let html = '';
-            
-            // Available Partners Section
+            const playersById = allPlayers.reduce((acc, player) => {
+                if (player.fields?.Name) {
+                    acc[player.id] = player.fields.Name;
+                }
+                return acc;
+            }, {});
+
+            const resolvePlayerName = (value) => {
+                if (!value) return null;
+                if (Array.isArray(value)) {
+                    const resolved = value
+                        .map(val => playersById[val] || val)
+                        .find(Boolean);
+                    return resolved || null;
+                }
+                return playersById[value] || value;
+            };
+
+            const pairIncludesCurrentPlayer = (value) => {
+                if (!value || !currentPlayerName) return false;
+                if (Array.isArray(value)) {
+                    if (currentPlayerId && value.includes(currentPlayerId)) {
+                        return true;
+                    }
+                    return value.includes(currentPlayerName);
+                }
+                return value === currentPlayerName || value === currentPlayerId;
+            };
+
+            const availablePartners = currentPlayerName
+                ? allPlayers.filter(p => p.fields.Name !== currentPlayerName)
+                : allPlayers;
+
+            const userPairs = currentPlayerName
+                ? allPairs.filter(pair => 
+                    pairIncludesCurrentPlayer(pair.fields['Player 1']) ||
+                    pairIncludesCurrentPlayer(pair.fields['Player 2'])
+                )
+                : [];
+
             let partnersHtml = '<div class="section">';
             if (!currentPlayer) {
                 partnersHtml += '<div class="empty-state"><div class="empty-state-icon">🤝</div><p>Join the league first to create pairs</p></div>';
@@ -661,7 +692,7 @@
                     const partnerELO = partner.fields.ELO || INITIAL_ELO;
                     const currentELO = currentPlayer.fields.ELO || INITIAL_ELO;
                     const eloDiff = Math.abs(partnerELO - currentELO);
-                    
+
                     partnersHtml += `
                         <div class="card">
                             <div class="card-header">
@@ -677,20 +708,21 @@
             }
             partnersHtml += '</div>';
 
-            // My Pairs Section
             let myPairsHtml = '';
             if (userPairs.length === 0) {
                 myPairsHtml = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>No active pairs yet</p></div>';
             } else {
                 userPairs.forEach(pair => {
-                    const partner = pair.fields['Player 1'] === currentUser.username ? pair.fields['Player 2'] : pair.fields['Player 1'];
+                    const player1Name = resolvePlayerName(pair.fields['Player 1']);
+                    const player2Name = resolvePlayerName(pair.fields['Player 2']);
+                    const partnerName = player1Name === currentPlayerName ? player2Name : player1Name;
                     const createdDate = pair.fields['Created Date'] || 'Today';
-                    
+
                     myPairsHtml += `
                         <div class="card">
                             <div class="card-header">
                                 <div>
-                                    <div class="card-title">You & ${partner}</div>
+                                    <div class="card-title">You & ${partnerName || 'Partner'}</div>
                                     <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">${createdDate}</div>
                                 </div>
                             </div>
