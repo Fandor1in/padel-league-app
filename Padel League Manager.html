@@ -467,15 +467,37 @@
         let allPairs = [];
 
         // Initialize Telegram WebApp
-        const tg = window.Telegram.WebApp;
-        tg.ready();
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        if (tg && typeof tg.ready === 'function') {
+            tg.ready();
+        }
+
+        function getTelegramUser() {
+            if (!tg) return null;
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                return tg.initDataUnsafe.user;
+            }
+            if (!tg.initData) return null;
+            try {
+                const params = new URLSearchParams(tg.initData);
+                const userParam = params.get('user');
+                if (!userParam) return null;
+                return JSON.parse(decodeURIComponent(userParam));
+            } catch (error) {
+                console.warn('Unable to parse Telegram initData user', error);
+                return null;
+            }
+        }
 
         // Initialize app
         async function init() {
-            const user = tg.initData && JSON.parse(tg.initData.split('user=')[1]?.split('&')[0] || '{}');
+            const user = getTelegramUser();
             if (user && user.id) {
-                currentUser = { id: user.id, username: user.username || 'Player' };
-                document.getElementById('playerName').textContent = currentUser.username;
+                const displayName = user.username || user.first_name || 'Player';
+                currentUser = { id: user.id, username: displayName };
+                document.getElementById('playerName').textContent = displayName;
+            } else {
+                document.getElementById('playerName').textContent = 'Guest';
             }
 
             await loadAllData();
