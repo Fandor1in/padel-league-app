@@ -319,8 +319,8 @@
             if (!currentUser) return false;
             return allPlayers.some(player => {
                 const fields = player.fields || {};
-                const telegramIdMatch = fields['Telegram ID'] && currentUser && String(fields['Telegram ID']) === String(currentUser.id);
-                const telegramUsernameMatch = fields['Telegram Username'] && currentUser && fields['Telegram Username'] === currentUser.username;
+                const telegramIdMatch = (fields['Telegram ID'] !== undefined) && currentUser && String(fields['Telegram ID']) === String(currentUser.id);
+                const telegramUsernameMatch = (fields['Telegram Username'] !== undefined) && currentUser && fields['Telegram Username'] === currentUser.username;
                 const nameMatch = fields['Name'] && currentUser && fields['Name'] === currentUser.username;
                 return telegramIdMatch || telegramUsernameMatch || nameMatch;
             });
@@ -439,7 +439,6 @@
                     if (!isNaN(parsed)) return parsed;
                 }
             }
-            // fallback: scan for any numeric field
             for (const key in fields) {
                 const val = fields[key];
                 if (val === undefined || val === null || val === '') continue;
@@ -522,8 +521,8 @@
                         if (relatedSets.length > 0) {
                             const parts = relatedSets.map(setRecord => {
                                 const f = setRecord.fields || {};
-                                const s1 = f['Pair 1 Score'] ?? f['Pair 1 Score'] ?? f['Pair 1 Score'] ?? f['Pair 1 Score'] ?? '';
-                                const s2 = f['Pair 2 Score'] ?? f['Pair 2 Score'] ?? f['Pair 2 Score'] ?? f['Pair 2 Score'] ?? '';
+                                const s1 = f['Pair 1 Score'] ?? f['Pair 1 Score'] ?? f['Pair 1 Score'] ?? '';
+                                const s2 = f['Pair 2 Score'] ?? f['Pair 2 Score'] ?? f['Pair 2 Score'] ?? '';
                                 return `${s1}-${s2}`;
                             }).filter(Boolean);
                             setScoresText = parts.join(', ');
@@ -560,8 +559,8 @@
             if (currentUser && allPlayers.length > 0) {
                 const player = allPlayers.find(p => {
                     const fields = p.fields || {};
-                    const idMatch = fields['Telegram ID'] && currentUser && String(fields['Telegram ID']) === String(currentUser.id);
-                    const usernameMatch = fields['Telegram Username'] && currentUser && fields['Telegram Username'] === currentUser.username;
+                    const idMatch = (fields['Telegram ID'] !== undefined) && currentUser && String(fields['Telegram ID']) === String(currentUser.id);
+                    const usernameMatch = (fields['Telegram Username'] !== undefined) && currentUser && fields['Telegram Username'] === currentUser.username;
                     const displayNameMatch = fields['Name'] && currentUser && currentUser.displayName && fields['Name'] === currentUser.displayName;
                     return idMatch || usernameMatch || displayNameMatch;
                 });
@@ -618,8 +617,8 @@
         function renderPairs() {
             const currentPlayer = currentUser ? allPlayers.find(p => {
                 const fields = p.fields || {};
-                const idMatch = fields['Telegram ID'] && currentUser && String(fields['Telegram ID']) === String(currentUser.id);
-                const usernameMatch = fields['Telegram Username'] && currentUser && fields['Telegram Username'] === currentUser.username;
+                const idMatch = (fields['Telegram ID'] !== undefined) && currentUser && String(fields['Telegram ID']) === String(currentUser.id);
+                const usernameMatch = (fields['Telegram Username'] !== undefined) && currentUser && fields['Telegram Username'] === currentUser.username;
                 const displayNameMatch = fields['Name'] && currentUser && currentUser.displayName && fields['Name'] === currentUser.displayName;
                 return idMatch || usernameMatch || displayNameMatch;
             }) : null;
@@ -724,7 +723,7 @@
             }
         }
 
-        // Join flow from start screen (do not send rating field)
+        // Join flow from start screen (do not send unknown fields)
         async function joinLeagueFromStart(buttonEl) {
             try {
                 let displayName = (currentUser && (currentUser.username || currentUser.displayName)) || 'Player';
@@ -745,7 +744,7 @@
                 buttonEl.disabled = true;
                 buttonEl.innerHTML = 'Joining...';
 
-                // Only send fields that exist in your schema: Name, Wins, Losses, Games Played, Telegram ID, Telegram Username
+                // Only send fields that match your Players schema (use exact Airtable field names)
                 const fieldsToCreate = {
                     'Name': displayName,
                     'Wins': 0,
@@ -779,7 +778,7 @@
             }
         }
 
-        // Basic pair creation/removal (keeps UI functional). Note: Airtable link fields generally prefer record IDs.
+        // Basic pair creation/removal
         async function createPair(playerAName, playerBName) {
             try {
                 if (!playerAName || !playerBName) { alert('Missing player names for pair creation.'); return; }
