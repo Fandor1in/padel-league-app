@@ -778,20 +778,69 @@
             }
         }
 
-        // Basic pair creation/removal
+        // Helper: find player record by Name, Telegram ID or Telegram Username
+        function findPlayerRecordLookup(nameOrIdentifier, preferTelegramId = false) {
+            if (!allPlayers || allPlayers.length === 0) return null;
+            // If preferTelegramId is true and currentUser exists, try to find record by Telegram ID first
+            if (preferTelegramId && currentUser && currentUser.id) {
+                const byId = allPlayers.find(p => {
+                    const f = p.fields || {};
+                    return (f['Telegram ID'] !== undefined) && String(f['Telegram ID']) === String(currentUser.id);
+                });
+                if (byId) return byId;
+            }
+            // Try find by exact Name
+            const byName = allPlayers.find(p => {
+                const f = p.fields || {};
+                return f.Name === nameOrIdentifier;
+            });
+            if (byName) return byName;
+            // Try Telegram Username match
+            const byUsername = allPlayers.find(p => {
+                const f = p.fields || {};
+                return f['Telegram Username'] && f['Telegram Username'] === nameOrIdentifier;
+            });
+            if (byUsername) return byUsername;
+            // Try Telegram ID (in case a numeric string was passed)
+            const byTelegramId = allPlayers.find(p => {
+                const f = p.fields || {};
+                return f['Telegram ID'] !== undefined && String(f['Telegram ID']) === String(nameOrIdentifier);
+            });
+            if (byTelegramId) return byTelegramId;
+            return null;
+        }
+
+        // Updated createPair: send linked record IDs as arrays (Airtable expects this)
         async function createPair(playerAName, playerBName) {
             try {
-                if (!playerAName || !playerBName) { alert('Missing player names for pair creation.'); return; }
+                // Lookup Airtable records for both players.
+                // For the current user (playerAName) prefer Telegram ID lookup when available.
+                const playerARecord = findPlayerRecordLookup(playerAName, true);
+                const playerBRecord = findPlayerRecordLookup(playerBName, false);
+
+                if (!playerARecord) {
+                    alert(`Cannot create pair: couldn't find a Players record for "${playerAName}". Make sure they joined the league.`);
+                    return;
+                }
+                if (!playerBRecord) {
+                    alert(`Cannot create pair: couldn't find a Players record for "${playerBName}". Make sure they joined the league.`);
+                    return;
+                }
+
                 const fields = {
-                    'Player 1': playerAName,
-                    'Player 2': playerBName,
+                    // Airtable link fields require an array of record IDs, not names.
+                    'Player 1': [playerARecord.id],
+                    'Player 2': [playerBRecord.id],
+                    // 'Created' is optional; Airtable may set Created time automatically if configured.
                     'Created': new Date().toISOString()
                 };
+
                 await createAirtableRecord(AIRTABLE_PAIRS_TABLE, fields);
                 await loadAllData();
                 activateTab('pairs');
             } catch (err) {
                 console.error('Error creating pair:', err);
+                // Airtable will return the detailed error message (e.g. "Value is not an array of record IDs")
                 alert('Failed to create pair: ' + (err.message || 'unknown error'));
             }
         }
