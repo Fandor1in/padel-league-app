@@ -226,7 +226,6 @@
         let allMatches = [];
         let allPairs = [];
         let allSetScores = [];
-        // Keep the current player's Airtable record for reliable matching
         let currentPlayerRecord = null;
 
         // Telegram WebApp init
@@ -296,8 +295,16 @@
                 allPairs = results[2] || [];
                 allSetScores = results[3] || [];
 
-                // Recompute the current player's Airtable record for reliable matching
-                currentPlayerRecord = findPlayerRecordLookup(currentUser && (currentUser.username || currentUser.displayName || currentUser.id), true);
+                console.debug('Loaded players:', allPlayers);
+                console.debug('Loaded pairs:', allPairs);
+
+                // Recompute current player record using multiple strategies
+                currentPlayerRecord = findPlayerRecordLookup(
+                    // prefer Telegram ID/username, but pass displayName as fallback
+                    currentUser && (currentUser.id || currentUser.username || currentUser.displayName),
+                    true
+                );
+                console.debug('Current player record:', currentPlayerRecord);
             } catch (err) {
                 error = err;
                 console.error('Error loading data:', err);
@@ -326,7 +333,7 @@
                 const fields = player.fields || {};
                 const telegramIdMatch = (fields['Telegram ID'] !== undefined) && currentUser && String(fields['Telegram ID']) === String(currentUser.id);
                 const telegramUsernameMatch = (fields['Telegram Username'] !== undefined) && currentUser && fields['Telegram Username'] === currentUser.username;
-                const nameMatch = fields['Name'] && currentUser && fields['Name'] === currentUser.username;
+                const nameMatch = fields['Name'] && currentUser && (fields['Name'] === currentUser.displayName || fields['Name'] === currentUser.username);
                 return telegramIdMatch || telegramUsernameMatch || nameMatch;
             });
         }
@@ -430,7 +437,6 @@
             });
         }
 
-        // Read rating from your Airtable schema. Prioritize "Individual Rating".
         function getPlayerRating(fields) {
             if (!fields) return INITIAL_ELO;
             const candidates = ['Individual Rating', 'Rating', 'Rating (ELO)', 'Initial Rating', 'RatingValue', 'rating', 'ELO'];
@@ -459,8 +465,8 @@
             if (Array.isArray(value)) {
                 return value.map(v => {
                     if (v && typeof v === 'object') {
-                        // Airtable sometimes returns objects for expanded records
-                        return v.id || v.recordId || (v.value && v.value.id) || String(v);
+                        // Expanded record object
+                        return v.id || v.recordId || (v.value && v.value.id) || (v.fields && v.fields.Id) || String(v);
                     }
                     return String(v);
                 }).filter(Boolean);
@@ -469,6 +475,36 @@
                 return [value.id || value.recordId || String(value)].filter(Boolean);
             }
             return [String(value)];
+        }
+
+        // Resolve linked ids, but if values look like player NAMES (not record ids), convert them to record ids via players lookup.
+        function getLinkedIdsFromPairField(pairFieldsValue) {
+            const ids = normalizeLinkedIds(pairFieldsValue);
+            // If ids look like Airtable record ids (start with "rec") return them
+            const looksLikeRecordId = ids.every(i => /^rec/i.test(i));
+            if (ids.length > 0 && looksLikeRecordId) return ids;
+
+            // If ids are present but not recXXX (maybe names), attempt to map to player record IDs by name.
+            const mapped = ids.map(val => {
+                // try find by exact Name
+                const found = allPlayers.find(p => (p.fields && p.fields.Name) === val);
+                if (found) return found.id;
+                // try by username
+                const found2 = allPlayers.find(p => p.fields && p.fields['Telegram Username'] === val);
+                if (found2) return found2.id;
+                return null;
+            }).filter(Boolean);
+
+            if (mapped.length > 0) return mapped;
+
+            // If there were no ids at all but pairFieldsValue is a plain string (a name), try to find record
+            if (!Array.isArray(pairFieldsValue) && typeof pairFieldsValue === 'string') {
+                const byName = allPlayers.find(p => p.fields && p.fields.Name === pairFieldsValue);
+                if (byName) return [byName.id];
+            }
+
+            // Nothing resolved
+            return [];
         }
 
         function renderStandings() {
@@ -638,7 +674,6 @@
         }
 
         function renderPairs() {
-            // Use the precomputed currentPlayerRecord for reliable id/name
             const currentPlayer = currentPlayerRecord;
             const currentPlayerName = currentPlayer?.fields?.Name || currentUser?.displayName || currentUser?.username;
             const currentPlayerId = currentPlayer?.id;
@@ -649,28 +684,28 @@
                 return acc;
             }, {});
 
+            // Resolve a display name from a pair field value (ids / names / objects)
             const resolvePlayerName = (value) => {
-                // value may be array of ids, single id, or names
-                const ids = normalizeLinkedIds(value);
-                if (ids.length > 0) {
-                    // return first matching name
+                const ids = getLinkedIdsFromPairField(value);
+                if (ids && ids.length > 0) {
                     const names = ids.map(id => playersById[id] || id);
                     return names.join(', ');
                 }
-                // fallback if value is a plain string name
-                return value || null;
+                // fallback to raw value if string
+                if (typeof value === 'string') return value;
+                return null;
             };
 
             const pairIncludesCurrentPlayer = (value) => {
-                const ids = normalizeLinkedIds(value);
-                if (!ids || ids.length === 0) {
-                    // maybe value is a name; try match against currentPlayerName
-                    return value === currentPlayerName;
+                const ids = getLinkedIdsFromPairField(value);
+                if (ids && ids.length > 0 && currentPlayerId) {
+                    if (ids.includes(currentPlayerId)) return true;
                 }
-                if (currentPlayerId && ids.includes(currentPlayerId)) return true;
-                // also fall back to name match for safety
+                // fallback check: if linked ids map to names that include currentPlayerName
                 const names = ids.map(id => playersById[id]).filter(Boolean);
                 if (currentPlayerName && names.includes(currentPlayerName)) return true;
+                // as last resort if value is a string name
+                if (typeof value === 'string' && value === currentPlayerName) return true;
                 return false;
             };
 
@@ -689,7 +724,7 @@
             } else {
                 availablePartners.forEach(partner => {
                     const partnerRating = getPlayerRating(partner.fields);
-                    const currentRating = getPlayerRating(currentPlayer.fields);
+                    const currentRating = getPlayerRating(currentPlayer.fields || {});
                     const diff = Math.abs(partnerRating - currentRating);
 
                     partnersHtml += `
@@ -712,7 +747,6 @@
                 myPairsHtml = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>No active pairs yet</p></div>';
             } else {
                 userPairs.forEach(pair => {
-                    // Resolve names from linked record ids
                     const p1 = resolvePlayerName(pair.fields['Player 1']);
                     const p2 = resolvePlayerName(pair.fields['Player 2']);
                     const partnerName = p1 === currentPlayerName ? p2 : p1;
@@ -749,7 +783,6 @@
             }
         }
 
-        // Join flow from start screen (do not send unknown fields)
         async function joinLeagueFromStart(buttonEl) {
             try {
                 let displayName = (currentUser && (currentUser.username || currentUser.displayName)) || 'Player';
@@ -770,7 +803,6 @@
                 buttonEl.disabled = true;
                 buttonEl.innerHTML = 'Joining...';
 
-                // Only send fields that match your Players schema (use exact Airtable field names)
                 const fieldsToCreate = {
                     'Name': displayName,
                     'Wins': 0,
@@ -804,12 +836,11 @@
             }
         }
 
-        // Helper: find player record by Name, Telegram ID or Telegram Username
+        // find player record by Telegram ID, username or Name (case-insensitive fallback)
         function findPlayerRecordLookup(nameOrIdentifier, preferTelegramId = false) {
             if (!allPlayers || allPlayers.length === 0) return null;
             const strId = nameOrIdentifier ? String(nameOrIdentifier) : '';
 
-            // prefer lookup by Telegram ID if currentUser present
             if (preferTelegramId && currentUser && currentUser.id) {
                 const byId = allPlayers.find(p => {
                     const f = p.fields || {};
@@ -818,31 +849,38 @@
                 if (byId) return byId;
             }
 
-            // Try find by exact Name
+            // exact name
             const byName = allPlayers.find(p => {
                 const f = p.fields || {};
                 return f.Name === nameOrIdentifier || (f.Name && String(f.Name) === strId);
             });
             if (byName) return byName;
 
-            // Try Telegram Username match
+            // username
             const byUsername = allPlayers.find(p => {
                 const f = p.fields || {};
                 return f['Telegram Username'] && f['Telegram Username'] === nameOrIdentifier;
             });
             if (byUsername) return byUsername;
 
-            // Try Telegram ID (numeric or string)
+            // Telegram ID (string or numeric)
             const byTelegramId = allPlayers.find(p => {
                 const f = p.fields || {};
                 return f['Telegram ID'] !== undefined && String(f['Telegram ID']) === strId;
             });
             if (byTelegramId) return byTelegramId;
 
+            // case-insensitive name fallback
+            const lower = String(strId).toLowerCase();
+            const byNameCI = allPlayers.find(p => {
+                const f = p.fields || {};
+                return f.Name && String(f.Name).toLowerCase() === lower;
+            });
+            if (byNameCI) return byNameCI;
+
             return null;
         }
 
-        // Updated createPair: send linked record IDs as arrays (Airtable expects this) and refresh data
         async function createPair(playerAName, playerBName) {
             try {
                 const playerARecord = findPlayerRecordLookup(playerAName, true);
@@ -863,7 +901,7 @@
                 };
 
                 await createAirtableRecord(AIRTABLE_PAIRS_TABLE, fields);
-                // reload data and re-render so the new pair appears immediately
+                // reload and re-render
                 await loadAllData();
                 activateTab('pairs');
             } catch (err) {
